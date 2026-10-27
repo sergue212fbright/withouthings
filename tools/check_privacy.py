@@ -18,9 +18,15 @@ assert application.get(ANDROID + "allowBackup") == "false", "Automatic backup mu
 for kind in ("activity", "activity-alias", "service", "receiver", "provider"):
     for item in application.findall(kind):
         if item.get(ANDROID + "exported") == "true":
-            assert kind == "activity" and item.get(ANDROID + "name") in (
+            launcher = kind == "activity" and item.get(ANDROID + "name") in (
                 ".MainActivity", "dev.davidv.withoutings.MainActivity"
-            ), "Unexpected exported component: " + str(item.attrib)
+            )
+            # AndroidX's profile receiver is restricted by a platform signature
+            # permission; ordinary applications cannot invoke it.
+            profiler = kind == "receiver" and item.get(ANDROID + "name") == (
+                "androidx.profileinstaller.ProfileInstallReceiver"
+            ) and item.get(ANDROID + "permission") == "android.permission.DUMP"
+            assert launcher or profiler, "Unexpected exported component: " + str(item.attrib)
 
 domains = {"root", "file", "database", "sharedpref", "external", "device_root", "device_file", "device_database", "device_sharedpref"}
 for name, sections in (("backup_rules.xml", (".",)), ("data_extraction_rules.xml", ("cloud-backup", "device-transfer"))):

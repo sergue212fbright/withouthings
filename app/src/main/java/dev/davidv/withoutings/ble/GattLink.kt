@@ -9,6 +9,7 @@ import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothProfile
 import android.bluetooth.BluetoothStatusCodes
 import android.content.Context
+import android.os.Build
 import android.util.Log
 import java.util.UUID
 
@@ -116,6 +117,7 @@ class GattLink(
         }
 
         @SuppressLint("MissingPermission")
+        @Suppress("DEPRECATION")
         override fun onServicesDiscovered(g: BluetoothGatt, status: Int) {
             Log.i(TAG, "discovered ${g.services.size} services, status=$status")
             val characteristic = findProtocolChannel(g)
@@ -132,13 +134,23 @@ class GattLink(
             channel = characteristic
             g.setCharacteristicNotification(characteristic, true)
             characteristic.getDescriptor(CLIENT_CONFIG)?.let {
-                g.writeDescriptor(it, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    g.writeDescriptor(it, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE)
+                } else {
+                    it.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                    g.writeDescriptor(it)
+                }
             }
         }
 
         override fun onDescriptorWrite(g: BluetoothGatt, d: BluetoothGattDescriptor, status: Int) {
             Log.i(TAG, "notifications enabled, status=$status")
             listener.onReady()
+        }
+
+        @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
+        override fun onCharacteristicChanged(g: BluetoothGatt, c: BluetoothGattCharacteristic) {
+            onCharacteristicChanged(g, c, c.value ?: return)
         }
 
         override fun onCharacteristicChanged(
@@ -167,6 +179,7 @@ class GattLink(
     }
 
     @SuppressLint("MissingPermission")
+    @Suppress("DEPRECATION")
     private fun drain() {
         val g = gatt ?: return
         val c = channel ?: return
@@ -180,7 +193,14 @@ class GattLink(
         // else would clear the flag and every later frame would queue behind
         // it forever.
         val status = runCatching {
-            g.writeCharacteristic(c, next, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                g.writeCharacteristic(c, next, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
+            } else {
+                c.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+                c.value = next
+                if (g.writeCharacteristic(c)) BluetoothStatusCodes.SUCCESS
+                else BluetoothStatusCodes.ERROR_UNKNOWN
+            }
         }.getOrElse { failure ->
             Log.w(TAG, "write threw", failure)
             BluetoothStatusCodes.ERROR_UNKNOWN

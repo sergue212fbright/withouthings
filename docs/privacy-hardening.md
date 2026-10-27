@@ -9,7 +9,8 @@ This branch is for testing before merge or an upstream contribution. It preserve
 - Disable automatic backup and explicitly exclude all storage domains from both cloud backup and device-to-device transfer. Pairing keys remain in private preferences and are excluded too.
 - Make the workout command receiver private. An unrelated app must not start a workout or activate route recording through this app's location permission.
 - Keep GPS routes and online maps off by default. Custom map providers must use HTTPS. Redirects are rejected, response bodies are capped at 1 MiB, and downloaded image dimensions are bounded. Map URLs containing credentials are rejected and provider URLs are not written to logs.
-- Update rusqlite/SQLite, UniFFI, and JNA. Use the checked-in Cargo lockfile for Android builds.
+- Update rusqlite/SQLite, UniFFI, and JNA. Use the checked-in Cargo lockfile for Android builds and keep binding-generator dependencies out of the native app library.
+- Restrict the preview/test activities added by debug dependencies. Check the merged manifest as well as the source manifest; AndroidX's platform-permission-protected profile receiver remains available to Android tools.
 
 Online maps deliberately disclose the requested map areas and the phone's network address to the chosen provider. Keeping maps off avoids those requests. No Withings account or cloud sync is added.
 
@@ -22,6 +23,8 @@ Clearing app storage or uninstalling deletes private history and pairing keys. I
 ## Build and checks
 
 Use JDK 17 or newer supported by Gradle, Android SDK platform 35, build tools 35.0.0, and an Android NDK. Install stable Rust, the `aarch64-linux-android` target, and `cargo-ndk` 4.1.2. Set `ANDROID_HOME` and `ANDROID_NDK_HOME` for your installation.
+
+On Linux, `python3 tools/setup_android_sdk.py` installs checksum-pinned Google command-line tools and the required SDK/NDK packages into `ANDROID_HOME`. This also works on runners where `sdkmanager` is no longer preinstalled.
 
 ```sh
 rustup target add aarch64-linux-android

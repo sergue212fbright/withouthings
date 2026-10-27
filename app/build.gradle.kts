@@ -7,6 +7,7 @@ plugins {
 android {
     namespace = "dev.davidv.withoutings"
     compileSdk = 35
+    ndkVersion = "28.2.13676358"
 
     defaultConfig {
         applicationId = "dev.davidv.withoutings"
@@ -22,6 +23,9 @@ android {
     }
 
     buildTypes {
+        debug {
+            versionNameSuffix = "-privacy-test.1"
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
@@ -70,6 +74,7 @@ val uniffiBindings by tasks.registering(Exec::class) {
         "--", "generate",
         "--library", "target/aarch64-linux-android/release/libwpp_ffi.so",
         "--language", "kotlin",
+        "--config", "wpp-ffi/uniffi.toml",
         "--out-dir", "app/build/generated/uniffi"
     )
 }

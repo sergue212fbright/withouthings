@@ -11,6 +11,7 @@ import android.bluetooth.BluetoothGattService
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
 import android.content.Context
+import android.os.Build
 import android.util.Log
 import java.util.UUID
 import uniffi.wpp_ffi.AncsLink
@@ -119,6 +120,7 @@ class AncsServer(
     }
 
     @SuppressLint("MissingPermission")
+    @Suppress("DEPRECATION")
     private fun drain() {
         val target = client ?: return
         val gattServer = server ?: return
@@ -142,7 +144,14 @@ class AncsServer(
         // A notify that never reaches the stack never calls back, so nothing
         // would clear the flag and every later fragment would queue behind it.
         val status = runCatching {
-            gattServer.notifyCharacteristicChanged(target, characteristic, false, next.second)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                gattServer.notifyCharacteristicChanged(target, characteristic, false, next.second)
+            } else {
+                characteristic.value = next.second
+                if (gattServer.notifyCharacteristicChanged(target, characteristic, false)) {
+                    BluetoothGatt.GATT_SUCCESS
+                } else BluetoothGatt.GATT_FAILURE
+            }
         }.getOrElse { failure ->
             Log.w(TAG, "notify threw", failure)
             BluetoothGatt.GATT_FAILURE

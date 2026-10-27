@@ -33,7 +33,9 @@ class LocationRecorder(context: Context, private val service: () -> WatchService
 
     fun arm() {
         if (recording) return
-        if (!permitted(context)) {
+        if (context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
             Log.w(TAG, "no location permission, no route")
             return
         }
