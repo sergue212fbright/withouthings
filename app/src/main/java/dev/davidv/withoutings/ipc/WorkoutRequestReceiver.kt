@@ -14,9 +14,8 @@ import uniffi.wpp_ffi.WatchService
 private const val TAG = "WorkoutRequest"
 
 /**
- * Lets any app on the phone put the watch into a workout, so that whatever knows
- * a session has begun - a bike hire, a gym app - can say so without a human
- * finding the phone and the sheet.
+ * Internal workout commands. The manifest keeps this receiver unexported:
+ * starting a workout can also start GPS recording under this app's grant.
  */
 class WorkoutRequestReceiver : BroadcastReceiver() {
 

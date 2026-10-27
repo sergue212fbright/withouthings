@@ -2,6 +2,11 @@
 
 This app handles the protocol for the Withings ScanWatch 2.
 
+The `privacy-hardening` branch is a clean-install test build with private health storage,
+backup exclusions, and restricted workout commands. See [changes, build instructions,
+and the device test checklist](docs/privacy-hardening.md). It is awaiting device testing
+before merge or an upstream contribution.
+
 Handles:
 
 - Sensor data (Heart rate, temperature, breath rate, steps, charge state / level)

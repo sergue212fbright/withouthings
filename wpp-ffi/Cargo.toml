@@ -7,9 +7,17 @@ edition = "2021"
 crate-type = ["cdylib", "lib"]
 name = "wpp_ffi"
 
+[features]
+cli = ["uniffi/cli"]
+
+[[bin]]
+name = "uniffi-bindgen"
+path = "src/bin/uniffi-bindgen.rs"
+required-features = ["cli"]
+
 [dependencies]
 wpp = { path = "../wpp" }
 wpp-store = { path = "../wpp-store" }
-uniffi = { version = "0.28", features = ["cli"] }
+uniffi = { version = "0.32.2", default-features = false }
 thiserror = "1"
 

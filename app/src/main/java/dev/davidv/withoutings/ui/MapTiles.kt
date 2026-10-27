@@ -1,5 +1,9 @@
 package dev.davidv.withoutings.ui
 
+import dev.davidv.withoutings.net.isSafeTileTemplate
+import dev.davidv.withoutings.net.MAX_TILE_BYTES
+import dev.davidv.withoutings.net.readTileBytes
+
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.util.Log
@@ -68,6 +72,12 @@ class TileSource(context: Context, private val template: String) {
             .getOrNull()
             ?: return null
 
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+        if (bounds.outWidth !in 1..1024 || bounds.outHeight !in 1..1024) {
+            Log.w(TAG, "tile $key has invalid image dimensions")
+            return null
+        }
         val decoded = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
         if (decoded == null) {
             Log.w(TAG, "tile $key came back as something that is not an image")
@@ -80,7 +90,11 @@ class TileSource(context: Context, private val template: String) {
     }
 
     private fun download(url: String): ByteArray? {
+        require(isSafeTileTemplate(template)) { "Map tiles require an HTTPS URL template" }
         val connection = URL(url).openConnection() as HttpURLConnection
+        // A redirect can change who learns the route area. Use the configured
+        // provider directly instead of silently following it to another host.
+        connection.instanceFollowRedirects = false
         // OpenStreetMap's tile policy asks that a client identify itself, and
         // serves a refusal to one that does not.
         connection.setRequestProperty("User-Agent", USER_AGENT)
@@ -88,10 +102,11 @@ class TileSource(context: Context, private val template: String) {
         connection.readTimeout = TIMEOUT_MS
         try {
             if (connection.responseCode != HttpURLConnection.HTTP_OK) {
-                Log.w(TAG, "tile server answered ${connection.responseCode} for $url")
+                Log.w(TAG, "tile server answered ${connection.responseCode}")
                 return null
             }
-            return connection.inputStream.use { it.readBytes() }
+            if (connection.contentLengthLong > MAX_TILE_BYTES) return null
+            return connection.inputStream.use(::readTileBytes)
         } finally {
             connection.disconnect()
         }

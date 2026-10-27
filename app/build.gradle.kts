@@ -57,7 +57,7 @@ val cargoNdk by tasks.registering(Exec::class) {
     workingDir = rootProject.projectDir
     commandLine(
         "cargo", "ndk", "-t", "arm64-v8a", "-o", "app/src/main/jniLibs",
-        "build", "--release", "-p", "wpp-ffi"
+        "build", "--locked", "--release", "-p", "wpp-ffi"
     )
 }
 
@@ -65,7 +65,8 @@ val uniffiBindings by tasks.registering(Exec::class) {
     dependsOn(cargoNdk)
     workingDir = rootProject.projectDir
     commandLine(
-        "cargo", "run", "--quiet", "--release", "-p", "wpp-ffi", "--bin", "uniffi-bindgen",
+        "cargo", "run", "--locked", "--quiet", "--release", "-p", "wpp-ffi",
+        "--features", "cli", "--bin", "uniffi-bindgen",
         "--", "generate",
         "--library", "target/aarch64-linux-android/release/libwpp_ffi.so",
         "--language", "kotlin",

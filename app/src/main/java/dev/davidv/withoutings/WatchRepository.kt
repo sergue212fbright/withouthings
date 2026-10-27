@@ -10,6 +10,7 @@ import java.time.ZoneId
 import uniffi.wpp_ffi.DstChange
 import uniffi.wpp_ffi.KnownWatch
 import uniffi.wpp_ffi.WatchService
+import dev.davidv.withoutings.net.isSafeTileTemplate
 
 enum class LinkState { Disconnected, Connecting, Connected, Ready }
 
@@ -126,7 +127,11 @@ class Settings(context: Context) {
 
     var tileUrl: String
         get() = prefs.getString(KEY_TILE_URL, DEFAULT_TILE_URL) ?: DEFAULT_TILE_URL
-        set(value) = prefs.edit().putString(KEY_TILE_URL, value.trim()).apply()
+        set(value) {
+            val template = value.trim()
+            require(isSafeTileTemplate(template)) { "Map tiles require an HTTPS URL template" }
+            prefs.edit().putString(KEY_TILE_URL, template).apply()
+        }
 
     companion object {
         const val DEFAULT_TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"

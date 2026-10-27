@@ -1,5 +1,7 @@
 package dev.davidv.withoutings.ui
 
+import dev.davidv.withoutings.net.isSafeTileTemplate
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -48,6 +50,15 @@ fun AppSettingsScreen(
             Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(AppTheme.space.blockMetric),
         ) {
+            Eyebrow("privacy and storage")
+            Text(
+                "Health history and pairing keys stay in this app's private storage. " +
+                    "Automatic backups and device transfers are disabled. Uninstalling " +
+                    "the app or clearing its storage removes local history and pairing keys.",
+                style = AppTheme.type.body,
+                color = AppTheme.colors.onSurfaceTertiary,
+            )
+
             RouteSection(routes)
 
             Eyebrow("diagnostics")
@@ -190,6 +201,8 @@ private fun RouteSection(routes: RouteSettings) {
             onValueChange = { typed = it },
             modifier = Modifier.fillMaxWidth(),
             label = { Text("Tile URL") },
+            isError = typed.isNotBlank() && !isSafeTileTemplate(typed.trim()),
+            supportingText = { Text("HTTPS URL with {z}, {x}, and {y}; no redirects") },
             singleLine = true,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Uri,
@@ -200,7 +213,7 @@ private fun RouteSection(routes: RouteSettings) {
             OutlineAction(
                 "Use it",
                 Modifier.weight(1f),
-                enabled = typed != routes.tileUrl && typed.isNotBlank(),
+                enabled = typed.trim() != routes.tileUrl && isSafeTileTemplate(typed.trim()),
             ) { routes.onTileUrl(typed) }
             OutlineAction(
                 "Back to OpenStreetMap",

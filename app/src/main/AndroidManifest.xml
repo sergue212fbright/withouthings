@@ -11,11 +11,6 @@
         tools:targetApi="s" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
 
-    <!-- The history is worth more than the app: it has to survive an uninstall,
-         and shared storage is the only path that does. Scoped storage has no
-         way to hand SQLite a real file path, and a document URI cannot carry
-         the -wal sibling, so nothing narrower than this grant works. -->
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- The watch has no receiver, so a route is the phone's own position
@@ -37,7 +32,7 @@
         android:required="true" />
 
     <application
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
@@ -64,12 +59,11 @@
             android:exported="false"
             android:foregroundServiceType="connectedDevice|location" />
 
-        <!-- Deliberately open: any app that knows a session has started may start
-             one here. The worst a stranger can do with it is record a workout
-             nobody did, which is not worth a permission and a shared signing key. -->
+        <!-- A workout can activate route recording. Only this app may issue
+             these commands; another app must not exercise our location grant. -->
         <receiver
             android:name=".ipc.WorkoutRequestReceiver"
-            android:exported="true">
+            android:exported="false">
             <intent-filter>
                 <action android:name="dev.davidv.withoutings.action.START_WORKOUT" />
                 <action android:name="dev.davidv.withoutings.action.STOP_WORKOUT" />

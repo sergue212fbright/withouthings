@@ -15,7 +15,6 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.IBinder
 import android.util.Log
-import dev.davidv.withoutings.DbLocation
 import dev.davidv.withoutings.LinkState
 import dev.davidv.withoutings.Settings
 import dev.davidv.withoutings.WatchRepository
@@ -104,10 +103,9 @@ class WatchConnectionService : Service() {
             return START_NOT_STICKY
         }
 
-        val location = watchDb(this)
-        if (location !is DbLocation.Ready) {
+        val location = runCatching { watchDb(this) }.getOrElse {
             WatchRepository.setLink(LinkState.Disconnected)
-            Log.e(TAG, "storage not reachable, no all-files grant")
+            Log.e(TAG, "private health storage is unavailable", it)
             stopSelf()
             return START_NOT_STICKY
         }
@@ -122,7 +120,7 @@ class WatchConnectionService : Service() {
             val ancs = AncsServer(this) { service }
             this.ancs = ancs
             service = WatchService(
-                dbPath = location.path,
+                dbPath = location,
                 mac = mac,
                 secret = secret,
                 transport = GattTransport(),
