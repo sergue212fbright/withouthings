@@ -71,7 +71,7 @@ val uniffiBindings by tasks.registering(Exec::class) {
     commandLine(
         "cargo", "run", "--locked", "--quiet", "--release", "-p", "wpp-ffi",
         "--features", "cli", "--bin", "uniffi-bindgen",
-        "--", "generate",
+        "--", "generate", "--no-format",
         "--library", "target/aarch64-linux-android/release/libwpp_ffi.so",
         "--language", "kotlin",
         "--config", "wpp-ffi/uniffi.toml",

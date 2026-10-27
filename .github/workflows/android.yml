@@ -15,7 +15,7 @@ jobs:
     timeout-minutes: 35
     env:
       CARGO_TERM_COLOR: always
-      ANDROID_HOME: ${{ runner.temp }}/android-sdk
+      ANDROID_HOME: ${{ github.workspace }}/.android-sdk
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
